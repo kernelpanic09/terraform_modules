@@ -1,0 +1,10 @@
+*.DS_Store
+*.tfvars
+*.terraform
+*.vscode
+*.retry
+*.lock
+**/*.backup
+**/*.tfstate
+terraform.tfvars
+backend_config.hcl
