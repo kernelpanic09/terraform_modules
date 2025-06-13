@@ -1,4 +1,4 @@
-# terraform_modules🌿 terraform_modules
+# terraform_modules
 
 A collection of curated Terraform modules designed to support secure, scalable, and modular infrastructure-as-code practices across AWS, Azure, GCP, GitHub, and more. Ideal for organizations adopting policy-driven, reusable automation in Terraform.
 🧭 Repository Structure
