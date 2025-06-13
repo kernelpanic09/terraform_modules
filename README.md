@@ -83,13 +83,3 @@ module "secure_repo" {
 📚 Documentation & Examples
 
     Module-level docs: Each folder includes a README.md with usage, inputs, outputs, and examples
-
-    Example configurations: examples/ subfolders illustrate real-world use cases per module
-
-⚙️ Contributing
-
-    ✅ PRs welcome for new modules, improvements, bugfixes
-
-    🔄 Follow the style and module documentation conventions
-
-    📋 Ensure modules include full input/output descriptions and have automated testing where possible
