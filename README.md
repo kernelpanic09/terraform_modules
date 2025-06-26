@@ -1,85 +1,98 @@
-# terraform_modules
+# AWS OIDC Integration for Terraform Cloud
 
-A collection of curated Terraform modules designed to support secure, scalable, and modular infrastructure-as-code practices across AWS, Azure, GCP, GitHub, and more. Ideal for organizations adopting policy-driven, reusable automation in Terraform.
-🧭 Repository Structure
+This Terraform module configures AWS IAM to support OpenID Connect (OIDC) authentication from Terraform Cloud. It automates creation of the OIDC provider and IAM roles, enabling secure, scalable workload identity federation across multiple Terraform workspaces.
 
-Each subdirectory under modules/ represents a standalone Terraform module:
+## Features
 
-terraform_modules/
-├── aws_organization/
-├── github_repository/
-├── gcp_oidc/
-├── azure_oidc/
-├── s3_bucket/
-├── workspaces/
-└── sso_account_assignment/
+- Creates an AWS IAM OIDC provider for Terraform Cloud
+- Dynamically provisions IAM roles per workspace
+- Generates scoped trust policies with `aud` and `sub` claims
+- Fully configurable via module inputs
+- Supports opt-in/opt-out deployment toggles
+STSaws cloud
+## Architecture Overview
 
-Each module is fully documented and intended to serve as a building block in larger infrastructure compositions.
-🚀 Getting Started
+![image](https://github.com/user-attachments/assets/7fb5aff4-0925-4fbd-b565-5fdc66312200)
 
-    Clone this repository
 
-git clone https://github.com/kernelpanic09/terraform_modules.git
-cd terraform_modules
+## Use Cases
 
-Use a module in your Terraform config
+- AWS authentication via Terraform Cloud's dynamic credentials
+- Least-privilege IAM role scoping per project and workspace
+- GitOps-style secure identity integration
 
-module "my_github_repo" {
-  source  = "./modules/github_repository"
-  version = "1.0.0"
+## Requirements
 
-  repository_name       = "my-app"
-  repository_visibility = "private"
-  permissions_engineering = true
-  workflow_wiz_iac      = true
+- Terraform v1.3 or higher
+- AWS account with IAM permissions
+- Terraform Cloud organization and workspaces
+
+## Module Usage
+
+```hcl
+module "aws_oidc" {
+  source = "github.com/YOUR_GITHUB_USERNAME/aws-oidc"
+
+  aws_config              = true
+  tfc_hostname            = "app.terraform.io"
+  tfc_org_name            = "my-org"
+  tfc_aws_audience        = "aws.workload.identity"
+  tfc_run_role_policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+
+  workspace_project_list = [
+    {
+      workspace_name = "dev"
+      project_name   = "infra"
+    },
+    {
+      workspace_name = "prod"
+      project_name   = "platform"
+    }
+  ]
 }
+```
 
-Init & apply
+IAM Trust Policy Example
 
-    terraform init
-    terraform apply
-
-🔐 Available Modules
-Module	Description
-aws_organization/	Manages AWS Organization structure, including OUs, accounts, and SCPs
-github_repository/	Creates GitHub repos with branch protection, workflows, and team access
-gcp_oidc/	Enables Terraform Cloud OIDC setup for GCP using Workload Identity Federation
-azure_oidc/	Sets up OIDC-based authentication between Terraform Cloud and Azure AD
-s3_bucket/	Deploys secure, versioned AWS S3 buckets with encryption and lifecycle rules
-workspaces/	Automates Terraform Cloud workspace creation with multi-cloud OIDC support
-sso_account_assignment/	Automates AWS IAM Identity Center (SSO) account assignments to users/groups
-📦 Requirements
-
-    Terraform ≥ 0.13
-
-    Providers as listed in each module's docs (e.g., AWS ≥ 3.45, GitHub ≥ 6.0, AzureAD ≥ 3.x, Google ≥ 5.x)
-
-📝 Usage Example
-
-To create a secure private GitHub repository with baseline workflows and permissions:
-
-module "secure_repo" {
-  source  = "./modules/github_repository"
-  version = "1.0.0"
-
-  repository_name         = "secure-app"
-  repository_visibility   = "private"
-  default_branch          = "main"
-  permissions_engineering = true
-  workflow_wiz_iac        = true
-  template_pull_request   = true
+```bash
+{
+  "Effect": "Allow",
+  "Principal": {
+    "Federated": "arn:aws:iam::123456789012:oidc-provider/app.terraform.io"
+  },
+  "Action": "sts:AssumeRoleWithWebIdentity",
+  "Condition": {
+    "StringEquals": {
+      "app.terraform.io:aud": "aws.workload.identity"
+    },
+    "StringLike": {
+      "app.terraform.io:sub": "organization:my-org:project:infra:workspace:dev:run_phase:*"
+    }
+  }
 }
+```
 
-🛡️ Security & Best Practices
 
-    Principle of least privilege: permissions are minimal by default
+## Outputs
 
-    Baseline branch protection and commit signing enforced
+| Name                  | Description                                         |
+|-----------------------|-----------------------------------------------------|
+| `tfc_iam_role_arns`   | List of IAM role ARNs for each Terraform workspace  |
+| `tfc_oidc_provider_arn` | ARN of the configured OIDC provider in AWS       |
 
-    OIDC modules support a two-phased bootstrap transition from static to dynamic credentials
 
-    Modules are composable and reusable across environments
+Directory Tree
+```bash
+aws-oidc/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── README.md
+```
 
-📚 Documentation & Examples
 
-    Module-level docs: Each folder includes a README.md with usage, inputs, outputs, and examples
+This module is built as a DevOps automation artifact for secure and scalable cloud identity integration using Terraform Cloud and AWS.
+
+
+
+
